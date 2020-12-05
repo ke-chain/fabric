@@ -7,16 +7,27 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ke-chain/fabric/orderer/common/localconfig"
 	"github.com/ke-chain/fabric/orderer/common/server/metadata"
+	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 var logger *zap.SugaredLogger
 
 func init() {
-	pro, _ := zap.NewProduction()
-	defer pro.Sync() // flushes buffer, if any
-	logger = pro.Sugar()
+	w := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "./foo.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, // days
+	})
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		w,
+		zap.InfoLevel,
+	)
+	logger = zap.New(core).Sugar()
 }
 
 //command line flags
@@ -29,7 +40,7 @@ var (
 
 // Main is the entry point of orderer process
 func Main() {
-	fullCmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+	fullCmd := kingpin.MustParse(app.Parse(os.Args[1:])) // 解析用户命令行
 
 	// "version" command
 	if fullCmd == version.FullCommand() {
@@ -37,10 +48,11 @@ func Main() {
 		return
 	}
 
-	conf, err := localconfig.Load()
+	conf, err := localconfig.Load() //  记载orderer配置文件
 	if err != nil {
-		logger.Error("failed to parse config: ", err)
+		logger.Error("failed to parse config: ", nil)
 		os.Exit(1)
 	}
-	spew.Dump(conf)
+	logger.Info(spew.Sdump(conf)) // log 记录所有配置信息
+	logger.Sync()                 // 输出 log 缓存
 }

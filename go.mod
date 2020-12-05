@@ -8,6 +8,7 @@ require (
 	github.com/hashicorp/go-version v1.2.1
 	github.com/hyperledger/fabric v2.1.1+incompatible
 	github.com/mitchellh/mapstructure v1.2.2
+	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.16.0

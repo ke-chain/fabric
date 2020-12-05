@@ -9,8 +9,8 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "/Users/zhouke/project/ke-fabric/cmd/orderer/",
-            "env": {"FABRIC_CFG_PATH":"/Users/zhouke/project/ke-fabric/sampleconfig"},
+            "program": "/Users/zhouke/go/src/github.com/ke-chain/fabric/cmd/orderer/main.go",
+            "env": {"FABRIC_CFG_PATH":"/Users/zhouke/go/src/github.com/ke-chain/fabric/sampleconfig"},
             "args": []
         }
     ]
