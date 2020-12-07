@@ -1,34 +1,17 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/hyperledger/fabric/common/flogging"
 	"github.com/ke-chain/fabric/orderer/common/localconfig"
 	"github.com/ke-chain/fabric/orderer/common/server/metadata"
-	"github.com/natefinch/lumberjack"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-var logger *zap.SugaredLogger
-
-func init() {
-	w := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   "./foo.log",
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28, // days
-	})
-	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		w,
-		zap.InfoLevel,
-	)
-	logger = zap.New(core).Sugar()
-}
+var logger = flogging.MustGetLogger("orderer.common.server")
 
 //command line flags
 var (
@@ -53,6 +36,27 @@ func Main() {
 		logger.Error("failed to parse config: ", nil)
 		os.Exit(1)
 	}
-	logger.Info(spew.Sdump(conf)) // log 记录所有配置信息
-	logger.Sync()                 // 输出 log 缓存
+	initializeLogging()
+
+	prettyPrintStruct(conf)
+}
+
+func initializeLogging() {
+	loggingSpec := os.Getenv("FABRIC_LOGGING_SPEC")
+	loggingFormat := os.Getenv("FABRIC_LOGGING_FORMAT")
+	flogging.Init(flogging.Config{
+		Format:  loggingFormat,
+		Writer:  os.Stderr,
+		LogSpec: loggingSpec,
+	})
+}
+
+func prettyPrintStruct(i interface{}) {
+	params := localconfig.Flatten(i)
+	var buffer bytes.Buffer
+	for i := range params {
+		buffer.WriteString("\n\t")
+		buffer.WriteString(params[i])
+	}
+	logger.Infof("Orderer config values:%s\n", buffer.String())
 }
